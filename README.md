@@ -1,6 +1,6 @@
 # 🏢 TechSolutions S.L. — Despliegue Seguro de Aplicación Web Corporativa
 
-**Módulo:** Servicios en Red  
+**Módulo:** Despliegue de APP  
 **Ciclo:** Desarrollo de Aplicaciones Web (DAW)  
 **Entorno de despliegue:** Docker sobre Ubuntu 22.04 LTS  
 
@@ -21,32 +21,21 @@
 
 ### 1.1 Contexto del proyecto
 
-La empresa ficticia **TechSolutions S.L.** necesita desplegar un portal web interno para la gestión de proyectos de sus empleados. Como administradores de sistemas, la tarea consiste en instalar, configurar y asegurar todos los servicios necesarios para que dicho portal funcione de forma segura y fiable.
+La empresa ficticia **TechSolutions S.L.** necesita desplegar un portal web interno para la gestión de proyectos de sus empleados.
 
-Este proyecto aplica los conocimientos adquiridos en el módulo de Servicios en Red, abarcando tres áreas fundamentales de la administración de sistemas:
+Este proyecto aplica los conocimientos adquiridos en el módulo de Despliegue de APP, abarcando tres áreas fundamentales de la administración de sistemas:
 
 - **Servidor web Apache** con soporte HTTPS
 - **Acceso remoto seguro** mediante SSH
-- **Protección perimetral** mediante firewall UFW
+- **Medidas de seguridad** mediante firewall UFW
 
 ### 1.2 Decisión de entorno: Docker en lugar de VirtualBox
 
 El enunciado propone el uso de una máquina virtual con VirtualBox. Sin embargo, por limitaciones de hardware en el equipo de trabajo, se ha optado por **Docker** como tecnología de virtualización alternativa.
 
-Esta decisión no compromete en absoluto los objetivos de aprendizaje, ya que:
-
-| Aspecto | VirtualBox | Docker |
-|---|---|---|
-| Sistema operativo base | Ubuntu 22.04 LTS | Ubuntu 22.04 LTS |
-| Instalación de servicios | `apt install` | `apt install` |
-| Configuración de Apache | Idéntica | Idéntica |
-| Configuración de SSH | Idéntica | Idéntica |
-| Configuración de UFW | Idéntica* | Idéntica* |
-| Reproducibilidad | Manual | Automática con Dockerfile |
-
 > *UFW requiere el parámetro `--cap-add=NET_ADMIN` en Docker para tener permisos sobre el kernel de red.
 
-Adicionalmente, el uso de Docker aporta una ventaja significativa: toda la infraestructura queda **codificada como código** (`Dockerfile` y `docker-compose.yml`), lo que permite reproducir el entorno completo con un único comando, algo muy valorado en entornos profesionales reales.
+Adicionalmente, el uso de Docker aporta una ventaja significativa: toda la infraestructura queda **codificada como código** (`Dockerfile` y `docker-compose.yml`), lo que permite reproducir el entorno completo con un único comando.
 
 ### 1.3 Arquitectura del sistema
 
@@ -97,7 +86,7 @@ techsolutions/
 **Clonar y desplegar:**
 
 ```bash
-git clone https://github.com/tu-usuario/techsolutions.git
+git clone https://github.com/Vilicaprogramer/techsolutions.git
 cd techsolutions
 docker-compose up --build
 ```
@@ -114,51 +103,7 @@ Una vez arrancado, los servicios estarán disponibles en:
 
 ## 2. Configuración de SSH Seguro
 
-### 2.1 ¿Qué es SSH y por qué es necesario?
-
-**SSH** (Secure Shell) es el protocolo estándar para acceder de forma remota a servidores Linux. Permite al administrador abrir una terminal en el servidor desde cualquier lugar, como si estuviera físicamente delante de él, con toda la comunicación cifrada.
-
-Sin SSH, cualquier cambio en el servidor requeriría acceso físico a la máquina, algo inviable en entornos reales donde los servidores pueden estar en centros de datos a cientos de kilómetros.
-
-### 2.2 El problema con la autenticación por contraseña
-
-La autenticación por contraseña es el método más intuitivo, pero también el más peligroso. Un atacante puede lanzar un **ataque de fuerza bruta**: un programa que prueba miles de combinaciones de usuario y contraseña por segundo de forma automática.
-
-```
-Atacante → "root / 123456"     → DENEGADO
-Atacante → "root / password"   → DENEGADO
-Atacante → "root / admin2025"  → DENEGADO
-...miles de intentos...
-Atacante → "root / qwerty123"  → ¡ACCESO! 💀
-```
-
-Este tipo de ataque es tan común que cualquier servidor SSH expuesto a internet recibe decenas de miles de intentos diarios.
-
-### 2.3 Solución: autenticación con clave pública
-
-La autenticación con clave pública elimina completamente el problema anterior. Se basa en un par de claves matemáticamente relacionadas:
-
-```
-🔑 Clave PRIVADA → Permanece en el ordenador del administrador
-                   Nunca se transmite por la red
-                   
-🔓 Clave PÚBLICA → Se copia al servidor
-                   No sirve de nada sin su pareja privada
-```
-
-El proceso de autenticación funciona así:
-
-```
-1. El cliente dice: "Quiero conectarme como admin-tech"
-2. El servidor genera un mensaje aleatorio y lo cifra con la clave pública
-3. Solo quien tenga la clave privada puede descifrar ese mensaje
-4. El cliente descifra y devuelve la respuesta
-5. El servidor verifica → "Correcto, eres tú. Pasa." ✅
-```
-
-Es matemáticamente imposible entrar sin la clave privada, independientemente de cuántos intentos haga un atacante.
-
-### 2.4 Generación del par de claves
+### 2.1 Generación del par de claves
 
 Las claves se generan en el **ordenador del administrador** (nunca en el servidor):
 
@@ -176,9 +121,9 @@ Esto genera dos archivos:
 - `~/.ssh/id_rsa` → Clave privada (proteger como si fuera una contraseña maestra)
 - `~/.ssh/id_rsa.pub` → Clave pública (la que se copia al servidor)
 
-### 2.5 Configuración SSH aplicada
+### 2.2 Configuración SSH aplicada
 
-El archivo `config/ssh/sshd_config` contiene la configuración endurecida del servidor SSH. Las directivas más relevantes desde el punto de vista de la seguridad son:
+El archivo `config/ssh/sshd_config` contiene la configuración del servidor SSH. Las directivas más relevantes desde el punto de vista de la seguridad son:
 
 ```bash
 # Bloquear el acceso del usuario root
@@ -204,7 +149,7 @@ AllowTcpForwarding no
 X11Forwarding no
 ```
 
-### 2.6 Decisiones de seguridad justificadas
+### 2.3 Decisiones de seguridad justificadas
 
 **¿Por qué bloquear root?**
 El usuario `root` existe en todos los sistemas Linux con ese nombre exacto. Un atacante ya sabe que ese usuario existe, así que solo tiene que adivinar la contraseña. Bloquearlo obliga al atacante a adivinar también el nombre de usuario.
@@ -222,34 +167,7 @@ El reenvío de puertos SSH puede usarse para crear túneles que salten el firewa
 
 ## 3. Despliegue y Aseguramiento de Apache
 
-### 3.1 ¿Qué es Apache?
-
-**Apache HTTP Server** es el servidor web más utilizado del mundo. Su función es recibir peticiones de navegadores y responder con los archivos HTML, CSS, imágenes u otros recursos que componen una página web.
-
-```
-Navegador → "GET /index.html HTTP/1.1"  →  Apache
-Apache    → Lee /var/www/techsolutions/index.html
-Apache    → "HTTP/1.1 200 OK" + contenido  →  Navegador
-```
-
-### 3.2 ¿Qué es HTTPS y por qué es obligatorio?
-
-**HTTP** transmite todos los datos en texto plano. Cualquier persona en la misma red (por ejemplo, en la misma WiFi) puede interceptar y leer el tráfico con herramientas como Wireshark.
-
-**HTTPS** añade una capa de cifrado mediante **TLS** (Transport Layer Security). Los datos viajan cifrados y, aunque sean interceptados, resultan ilegibles sin la clave de descifrado.
-
-```
-HTTP  → "usuario=admin&password=techsolutions2025"  (visible para todos)
-HTTPS → "aK9#mP2@xL5!qR8..."                        (ilegible sin clave)
-```
-
-Para habilitar HTTPS se necesita un **certificado SSL/TLS**, que cumple dos funciones:
-1. Contiene las claves para cifrar la comunicación
-2. Certifica la identidad del servidor
-
-En este proyecto se usa un **certificado autofirmado** (generado por nosotros mismos), apropiado para entornos de prueba. En producción real se utilizaría Let's Encrypt, que emite certificados gratuitos reconocidos por todos los navegadores.
-
-### 3.3 Generación del certificado autofirmado
+### 3.1 Generación del certificado autofirmado
 
 ```bash
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
@@ -265,7 +183,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 | `-days 365` | Válido durante un año |
 | `-newkey rsa:2048` | Genera una nueva clave RSA de 2048 bits |
 
-### 3.4 Configuración de los VirtualHosts
+### 3.2 Configuración de los VirtualHosts
 
 Apache usa el concepto de **VirtualHost** para poder servir diferentes sitios web desde el mismo servidor. En este proyecto se configuran dos:
 
@@ -298,17 +216,7 @@ Header always set X-Content-Type-Options "nosniff"
 Header always set Strict-Transport-Security "max-age=31536000"
 ```
 
-### 3.5 Cabeceras de seguridad HTTP explicadas
-
-Las cabeceras de seguridad son instrucciones que el servidor envía al navegador para indicarle cómo debe comportarse. Son una capa de protección adicional invisible para el usuario.
-
-| Cabecera | Protege contra |
-|---|---|
-| `X-Frame-Options: SAMEORIGIN` | **Clickjacking**: evita que la web se cargue dentro de un iframe de otro sitio |
-| `X-Content-Type-Options: nosniff` | Evita que el navegador "adivine" el tipo de archivo, previniendo ataques XSS |
-| `Strict-Transport-Security` | Fuerza al navegador a usar siempre HTTPS en futuros accesos |
-
-### 3.6 Protección del panel de administración
+### 3.4 Protección del panel de administración
 
 El directorio `/admin` contiene información sensible y requiere una capa adicional de autenticación. Se implementa mediante **HTTP Basic Authentication**:
 
@@ -341,27 +249,11 @@ Sin esta directiva, si un usuario accede a una carpeta que no tiene archivo `ind
 
 ## 4. Firewall y Protección Adicional
 
-### 4.1 ¿Qué es un firewall y para qué sirve?
+### 4.1 UFW: Uncomplicated Firewall
 
-Un firewall es un sistema que controla el tráfico de red entrante y saliente según un conjunto de reglas. Actúa como un filtro entre el servidor y el exterior.
+**UFW** es la herramienta de gestión de firewall de Ubuntu. Simplifica la configuración de `iptables`, que es el sistema de filtrado de paquetes del kernel Linux.
 
-Sin firewall, el servidor tiene todos sus puertos accesibles desde cualquier lugar. Un atacante puede escanear todos los puertos buscando servicios vulnerables. Con firewall, solo los puertos estrictamente necesarios son accesibles; el resto son invisibles.
-
-```
-SIN firewall:                    CON firewall:
-Puerto 22  → accesible           Puerto 22  → accesible ✅
-Puerto 80  → accesible           Puerto 80  → accesible ✅
-Puerto 443 → accesible           Puerto 443 → accesible ✅
-Puerto 3306 → accesible ⚠️       Puerto 3306 → BLOQUEADO 🛡️
-Puerto 8080 → accesible ⚠️       Puerto 8080 → BLOQUEADO 🛡️
-...65.530 puertos más → accesibles   ...resto → BLOQUEADOS 🛡️
-```
-
-### 4.2 UFW: Uncomplicated Firewall
-
-**UFW** es la herramienta de gestión de firewall de Ubuntu. Simplifica la configuración de `iptables`, que es el sistema de filtrado de paquetes del kernel Linux, pero cuya sintaxis es compleja y propensa a errores.
-
-### 4.3 Principio de mínimo privilegio aplicado al firewall
+### 4.2 Principio de mínimo privilegio aplicado al firewall
 
 La política configurada sigue el principio de **mínimo privilegio**: todo lo que no esté explícitamente permitido, está prohibido.
 
@@ -378,7 +270,7 @@ ufw allow 80/tcp    # HTTP: redirección a HTTPS
 ufw allow 443/tcp   # HTTPS: portal web
 ```
 
-### 4.4 ¿Por qué estos tres puertos y no otros?
+### 4.3 ¿Por qué estos tres puertos?
 
 **Puerto 22 (SSH):** Necesario para que los administradores puedan gestionar el servidor de forma remota. Sin este puerto, cualquier cambio requeriría acceso físico.
 
@@ -540,33 +432,12 @@ To          Action      From
 
 La decisión de utilizar Docker en lugar de VirtualBox ha resultado ser una fortaleza del proyecto, no una limitación. La infraestructura como código garantiza que el entorno sea **100% reproducible**: cualquier persona que descargue el repositorio y ejecute `docker-compose up --build` obtendrá exactamente el mismo resultado, independientemente de su sistema operativo o configuración local.
 
-Esta es precisamente la filosofía que se aplica en entornos profesionales modernos, donde el despliegue manual y no documentado de servidores es considerado una mala práctica.
+### 6.3 Aprendizajes clave
 
-### 6.3 Limitaciones y mejoras futuras
+Antes de hacer esta práctica, pensaba que la seguridad era algo que se configuraba al final, como un paso extra. Ahora entiendo que no funciona así: cada decisión que tomas al configurar un servidor tiene implicaciones de seguridad, desde elegir si permites contraseñas en SSH hasta decidir qué puertos deja pasar el firewall.
 
-Este proyecto está diseñado como entorno de pruebas. En un entorno de producción real se implementarían las siguientes mejoras:
-
-**Sobre SSL/TLS:**
-- Sustituir el certificado autofirmado por uno de **Let's Encrypt**, evitando los avisos del navegador y siendo reconocido universalmente.
-
-**Sobre SSH:**
-- Cambiar el puerto 22 por uno no estándar (por ejemplo, 2222) para reducir el ruido de bots automáticos.
-- Implementar **fail2ban** para bloquear automáticamente IPs que realicen demasiados intentos fallidos.
-
-**Sobre Apache:**
-- Implementar un **WAF** (Web Application Firewall) como ModSecurity para proteger contra ataques a nivel de aplicación (inyección SQL, XSS, etc.).
-- Configurar logs centralizados para monitorización en tiempo real.
-
-**Sobre la infraestructura:**
-- Separar el servidor web del servidor de base de datos en contenedores distintos.
-- Implementar copias de seguridad automáticas.
-- Configurar un sistema de monitorización como Prometheus + Grafana.
-
-### 6.4 Aprendizajes clave
-
-Este proyecto ha permitido comprender en la práctica que **la seguridad no es una característica que se añade al final**, sino una consideración que debe estar presente en cada decisión de configuración. Desde la elección del algoritmo de cifrado SSH hasta la política por defecto del firewall, cada parámetro tiene una justificación de seguridad detrás.
-
-La metodología seguida — entender cada pilar de forma independiente antes de integrarlo todo — ha facilitado comprender no solo el *cómo* sino el *por qué* de cada configuración, que es precisamente lo más valioso en el ejercicio de la administración de sistemas.
+Lo que más me ha ayudado ha sido trabajar cada servicio por separado antes de juntarlo todo. Cuando intenté configurarlo todo a la vez al principio me perdía, pero al entender primero Apache, luego SSH y luego el firewall por separado, fui capaz de ver para qué sirve cada pieza y por qué está ahí. Creo que esa es la 
+diferencia entre seguir unos pasos sin entenderlos y realmente aprender algo.
 
 ---
 
@@ -580,4 +451,4 @@ La metodología seguida — entender cada pilar de forma independiente antes de 
 
 ---
 
-*Proyecto desarrollado como práctica del módulo de Servicios en Red — DAW*
+*Proyecto desarrollado como práctica del módulo de Despliegue de APP — DAW*
