@@ -1,0 +1,51 @@
+# ============================================
+# CONFIGURACIÓN SSH SEGURA - TECHSOLUTIONS S.L.
+# ============================================
+
+# Puerto estándar SSH
+Port 22
+
+# Solo protocolo versión 2 (la 1 tiene vulnerabilidades conocidas)
+Protocol 2
+
+# Clave del servidor
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# === SEGURIDAD DE ACCESO ===
+
+# Deshabilitar acceso del usuario root
+PermitRootLogin no
+
+# Solo autenticación con clave pública, nunca contraseña
+PasswordAuthentication no
+PubkeyAuthentication yes
+
+# Solo este usuario puede conectarse
+AllowUsers admin-tech
+
+# Desactivar otros métodos de autenticación
+ChallengeResponseAuthentication no
+UsePAM yes
+
+# === PROTECCIÓN ADICIONAL ===
+
+# Tiempo máximo para autenticarse (30 segundos)
+LoginGraceTime 30
+
+# Máximo de intentos de login por conexión
+MaxAuthTries 3
+
+# Máximo de sesiones simultáneas
+MaxSessions 5
+
+# Desactivar reenvío de puertos y X11
+AllowTcpForwarding no
+X11Forwarding no
+
+# Mostrar último acceso al conectarse
+PrintLastLog yes
+
+# Mantener conexión activa
+ClientAliveInterval 300
+ClientAliveCountMax 2

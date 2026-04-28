@@ -1,0 +1,27 @@
+# ============================================
+# DOCKER COMPOSE - TECHSOLUTIONS S.L.
+# Levanta el servidor completo con un comando
+# ============================================
+
+version: '3.8'
+
+services:
+  servidor-techsolutions:
+    # Construir desde nuestro Dockerfile
+    build: .
+    container_name: techsolutions
+
+    # Permisos necesarios para SSH y UFW
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+    # Mapeo de puertos:
+    # Windows:Contenedor
+    ports:
+      - "80:80"       # HTTP
+      - "443:443"     # HTTPS
+      - "2222:22"     # SSH (usamos 2222 para no conflictos)
+
+    # Reiniciar automáticamente si el contenedor falla
+    restart: unless-stopped
