@@ -34,7 +34,7 @@ COPY web/ /var/www/techsolutions/
 COPY config/apache/techsolutions.conf     /etc/apache2/sites-available/
 COPY config/apache/techsolutions-ssl.conf /etc/apache2/sites-available/
 
-# Activar nuestros sitios y desactivar el de por defecto
+# Activar techsolutions y desactivar el sitio por defecto
 RUN a2ensite techsolutions.conf techsolutions-ssl.conf && \
     a2dissite 000-default.conf
 
@@ -62,7 +62,7 @@ RUN useradd -m -s /bin/bash admin-tech && \
     mkdir -p /home/admin-tech/.ssh && \
     chmod 700 /home/admin-tech/.ssh
 
-# Copiar configuración SSH endurecida
+# Copiar configuración SSH
 COPY config/ssh/sshd_config /etc/ssh/sshd_config
 
 # Copiar clave pública del administrador
